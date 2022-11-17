@@ -14,7 +14,7 @@ import (
 	"github.com/slok/goresilience/retry"
 	"golang.org/x/oauth2"
 	cc "golang.org/x/oauth2/clientcredentials"
-	"gopkg.in/resty.v1"
+	resty "gopkg.in/resty.v1"
 )
 
 var ErrCircuitOpen = goresilienceErrors.ErrCircuitOpen
