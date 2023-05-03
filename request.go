@@ -143,13 +143,13 @@ func registerMetrics(key string, metrics Metrics, f func() (*Response, error)) (
 	resp, err := f()
 
 	if metrics != nil {
-		metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "total"))
-
 		go func(resp *Response, err error) {
+			attrs := map[string]string{}
 			if resp != nil {
 				metrics.PushToSeries(fmt.Sprintf("%s.%s", key, "response_time"), resp.ResponseTime().Seconds())
 				if resp.statusCode != 0 {
 					metrics.IncrCounter(fmt.Sprintf("%s.status.%d", key, resp.StatusCode()))
+					attrs["status"] = fmt.Sprintf("%d", resp.StatusCode())
 				}
 			}
 			if err != nil {
@@ -159,6 +159,7 @@ func registerMetrics(key string, metrics Metrics, f func() (*Response, error)) (
 					metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "errors"))
 				}
 			}
+			metrics.IncrCounterWithAttrs(fmt.Sprintf("%s.%s", key, "total"), attrs)
 		}(resp, err)
 	}
 
