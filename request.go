@@ -104,6 +104,11 @@ func (r *Request) Put(url string) (*Response, error) {
 	return r.Execute("PUT", url)
 }
 
+// Patch performs an HTTP method PATCH request given an url.
+func (r *Request) Patch(url string) (*Response, error) {
+	return r.Execute("PATCH", url)
+}
+
 // Delete performs an HTTP method DELETE request given an url.
 func (r *Request) Delete(url string) (*Response, error) {
 	return r.Execute("DELETE", url)

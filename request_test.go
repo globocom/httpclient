@@ -33,6 +33,7 @@ func TestRequest(t *testing.T) {
 		"Get":          testGet,
 		"Post":         testPost,
 		"Put":          testPut,
+		"Patch":        testPatch,
 		"Delete":       testDelete,
 	}
 
@@ -119,6 +120,16 @@ func testPut(target *httpclient.Request) func(*testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "PUT", gReq.Method)
+	}
+}
+
+func testPatch(target *httpclient.Request) func(*testing.T) {
+	return func(t *testing.T) {
+		target.SetBody([]byte("test"))
+		_, err := target.Patch("/")
+
+		assert.NoError(t, err)
+		assert.Equal(t, "PATCH", gReq.Method)
 	}
 }
 
