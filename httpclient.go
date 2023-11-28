@@ -112,6 +112,14 @@ func WithDefaultTransport(transportTimeout time.Duration) func(*HTTPClient) {
 	}
 }
 
+// WithTransport configures the client to use a custom *http.Transport
+// More information about transport: [net/http.Transport]
+func WithTransport(transport *http.Transport) func(*HTTPClient) {
+	return func(client *HTTPClient) {
+		client.setTransport(transport)
+	}
+}
+
 // WithOAUTHTransport allows the client to make OAuth HTTP requests with custom timeout.
 // This timeout limits the time spent establishing a TCP connection.
 //
