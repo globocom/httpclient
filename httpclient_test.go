@@ -30,7 +30,7 @@ func testCircuitBreaker(t *testing.T) {
 	errorThreshold := 1
 
 	client := httpclient.NewHTTPClient(
-		io.Discard,
+		&httpclient.LoggerAdapter{Writer: io.Discard},
 		httpclient.WithDefaultTransport(1*time.Second),
 		httpclient.WithTimeout(1*time.Second),
 		httpclient.WithCircuitBreaker(circuitbreaker.Config{
@@ -58,14 +58,14 @@ func testRetries(t *testing.T) {
 	expectedTimes := 3
 	waitAmount := 500 * time.Millisecond
 	clientLinear := httpclient.NewHTTPClient(
-		io.Discard,
+		&httpclient.LoggerAdapter{Writer: io.Discard},
 		httpclient.WithDefaultTransport(1*time.Second),
 		httpclient.WithTimeout(1*time.Second),
 		httpclient.WithLinearBackoff(expectedTimes, waitAmount),
 	)
 
 	clientExponential := httpclient.NewHTTPClient(
-		io.Discard,
+		&httpclient.LoggerAdapter{Writer: io.Discard},
 		httpclient.WithDefaultTransport(1*time.Second),
 		httpclient.WithTimeout(1*time.Second),
 		httpclient.WithExponentialBackoff(expectedTimes, waitAmount),
@@ -116,7 +116,7 @@ func testCallback(t *testing.T) {
 	writer := io.Writer(&b)
 
 	client := httpclient.NewHTTPClient(
-		io.Discard,
+		&httpclient.LoggerAdapter{Writer: io.Discard},
 		httpclient.WithChainCallback(loggerCallback(writer)),
 	)
 

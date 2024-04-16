@@ -37,7 +37,7 @@ func TestRequest(t *testing.T) {
 	}
 
 	client := httpclient.NewHTTPClient(
-		io.Discard,
+		&httpclient.LoggerAdapter{Writer: io.Discard},
 		httpclient.WithHostURL(server.URL),
 	)
 

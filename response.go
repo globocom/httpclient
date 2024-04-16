@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	resty "gopkg.in/resty.v1"
+	resty "github.com/go-resty/resty/v2"
 )
 
 type Response struct {
