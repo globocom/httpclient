@@ -35,9 +35,9 @@ type (
 //
 // Parameters:
 //
-//	logger: Logger interface is used to log request and response details.
+//	logger: interface is used to log request and response details.
 //	options: specifies options to HTTPClient.
-func NewHTTPClient(logger Logger, options ...Opt) *HTTPClient {
+func NewHTTPClient(logger resty.Logger, options ...Opt) *HTTPClient {
 	return newClient(resty.New().SetLogger(logger).GetClient(), options...)
 }
 
