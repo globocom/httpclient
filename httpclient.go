@@ -3,18 +3,17 @@ package httpclient
 import (
 	"context"
 	"crypto/tls"
-	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
 
+	resty "github.com/go-resty/resty/v2"
 	"github.com/slok/goresilience/circuitbreaker"
 	goresilienceErrors "github.com/slok/goresilience/errors"
 	"github.com/slok/goresilience/retry"
 	"golang.org/x/oauth2"
 	cc "golang.org/x/oauth2/clientcredentials"
-	resty "gopkg.in/resty.v1"
 )
 
 var ErrCircuitOpen = goresilienceErrors.ErrCircuitOpen
@@ -36,14 +35,13 @@ type (
 //
 // Parameters:
 //
-//	logger: an io.Writer is used to log request and response details.
+//	logger: interface is used to log request and response details.
 //	options: specifies options to HTTPClient.
-func NewHTTPClient(logger io.Writer, options ...Opt) *HTTPClient {
-	return newClient(resty.New().SetLogger(logger).GetClient(), false,
-		options...)
+func NewHTTPClient(logger resty.Logger, options ...Opt) *HTTPClient {
+	return newClient(resty.New().SetLogger(logger).GetClient(), options...)
 }
 
-func newClient(customClient *http.Client, oauth bool, options ...Opt) *HTTPClient {
+func newClient(customClient *http.Client, options ...Opt) *HTTPClient {
 	client := &HTTPClient{
 		resty:         resty.NewWithClient(customClient),
 		callbackChain: noopCallback,
@@ -219,7 +217,7 @@ func WithCookie(name, value string) func(*HTTPClient) {
 func WithHostURL(baseURL string) func(*HTTPClient) {
 	return func(client *HTTPClient) {
 		client.hostURL, _ = url.Parse(baseURL)
-		client.resty.SetHostURL(baseURL)
+		client.resty.SetBaseURL(baseURL)
 	}
 }
 

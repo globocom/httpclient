@@ -15,7 +15,7 @@ func TestResponse(t *testing.T) {
 	defer server.Close()
 
 	client := httpclient.NewHTTPClient(
-		io.Discard,
+		&httpclient.LoggerAdapter{Writer: io.Discard},
 		httpclient.WithHostURL(server.URL),
 	)
 
