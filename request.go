@@ -36,6 +36,12 @@ func (r *Request) HostURL() *url.URL {
 	return r.hostURL
 }
 
+// SetHostURL sets the host url for the request.
+func (r *Request) SetHostURL(url *url.URL) *Request {
+	r.hostURL = url
+	return r
+}
+
 // SetAlias sets the alias to replace the hostname in metrics.
 func (r *Request) SetAlias(alias string) *Request {
 	r.alias = alias
