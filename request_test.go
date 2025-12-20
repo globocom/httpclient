@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/globocom/httpclient"
@@ -30,6 +31,7 @@ func TestRequest(t *testing.T) {
 		"SetBody":      testSetBody,
 		"SetHeader":    testSetHeader,
 		"SetBasicAuth": testSetBasicAuth,
+		"SetHostURL":   testSetHostURL,
 		"Get":          testGet,
 		"Post":         testPost,
 		"Put":          testPut,
@@ -129,5 +131,32 @@ func testDelete(target *httpclient.Request) func(*testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, "DELETE", gReq.Method)
+	}
+}
+
+func testSetHostURL(target *httpclient.Request) func(*testing.T) {
+	return func(t *testing.T) {
+		// Create a new URL to set
+		newURL, err := url.Parse("https://example.com:8080")
+		assert.NoError(t, err)
+
+		// Test setting the host URL
+		result := target.SetHostURL(newURL)
+
+		// Verify the method returns the request instance (for chaining)
+		assert.Equal(t, target, result)
+
+		// Verify the host URL was set correctly
+		hostURL := target.HostURL()
+		assert.NotNil(t, hostURL)
+		assert.Equal(t, "https://example.com:8080", hostURL.String())
+		assert.Equal(t, "example.com", hostURL.Hostname())
+		assert.Equal(t, "8080", hostURL.Port())
+		assert.Equal(t, "https", hostURL.Scheme)
+
+		// Test with nil URL
+		result2 := target.SetHostURL(nil)
+		assert.Equal(t, target, result2)
+		assert.Nil(t, target.HostURL())
 	}
 }

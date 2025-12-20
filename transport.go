@@ -24,7 +24,7 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func (t *Transport) setRequestIDHeader(ctx context.Context, req *http.Request) {
-	rID := requestID(ctx)
+	rID := RequestID(ctx)
 	if rID == "" {
 		return
 	}

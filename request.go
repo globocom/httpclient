@@ -36,6 +36,12 @@ func (r *Request) HostURL() *url.URL {
 	return r.hostURL
 }
 
+// SetHostURL sets the host url for the request.
+func (r *Request) SetHostURL(url *url.URL) *Request {
+	r.hostURL = url
+	return r
+}
+
 // SetAlias sets the alias to replace the hostname in metrics.
 func (r *Request) SetAlias(alias string) *Request {
 	r.alias = alias
@@ -144,8 +150,12 @@ func registerMetrics(key string, metrics Metrics, f func() (*Response, error)) (
 
 	if metrics != nil {
 		go func(resp *Response, err error) {
-			attrs := map[string]string{}
+			var attrs map[string]string
 			if resp != nil {
+				attrs = map[string]string{
+					"host": resp.Request().HostURL().Host,
+					"path": resp.Request().HostURL().Path,
+				}
 				metrics.PushToSeries(fmt.Sprintf("%s.%s", key, "response_time"), resp.ResponseTime().Seconds())
 				if resp.statusCode != 0 {
 					metrics.IncrCounter(fmt.Sprintf("%s.status.%d", key, resp.StatusCode()))

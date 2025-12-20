@@ -4,11 +4,11 @@ import (
 	"context"
 )
 
-const contextRequestIDKey = "request.id"
+const ContextRequestIDKey = "request.id"
 
 // requestID returns a request present on context.
-func requestID(ctx context.Context) string {
-	value := ctx.Value(contextRequestIDKey)
+func RequestID(ctx context.Context) string {
+	value := ctx.Value(ContextRequestIDKey)
 	if value == nil {
 		return ""
 	}

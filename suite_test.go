@@ -1,4 +1,4 @@
-package httpclient
+package httpclient_test
 
 import (
 	"testing"
