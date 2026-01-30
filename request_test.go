@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/globocom/httpclient"
 
@@ -159,4 +160,32 @@ func testSetHostURL(target *httpclient.Request) func(*testing.T) {
 		assert.Equal(t, target, result2)
 		assert.Nil(t, target.HostURL())
 	}
+}
+
+func TestSetMetricsAttrs_PropagatesToMetrics(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(handleFunc))
+	defer server.Close()
+
+	metrics := &mockMetrics{}
+	client := httpclient.NewHTTPClient(
+		&httpclient.LoggerAdapter{Writer: io.Discard},
+		httpclient.WithHostURL(server.URL),
+		httpclient.WithMetrics(metrics),
+	)
+	request := client.NewRequest()
+
+	attrs := map[string]string{"foo": "bar", "baz": "qux"}
+	request.SetMetricsAttrs(attrs)
+	_, _ = request.Get("/")
+
+	time.Sleep(100 * time.Millisecond)
+
+	found := false
+	for _, calledAttrs := range metrics.incrCounterWithAttrsCalls {
+		if calledAttrs.attrs["foo"] == "bar" && calledAttrs.attrs["baz"] == "qux" {
+			found = true
+			break
+		}
+	}
+	assert.True(t, found, "Attributes passed to SetMetricsAttrs must be propagated to IncrCounterWithAttrs")
 }
