@@ -25,10 +25,11 @@ type Request struct {
 // NewRequest creates a request for the specified HTTP method.
 func (c *HTTPClient) NewRequest() *Request {
 	return &Request{
-		restyRequest:  c.resty.NewRequest(),
-		chainCallback: c.callbackChain,
-		metrics:       c.metrics,
-		hostURL:       c.hostURL,
+		restyRequest:    c.resty.NewRequest(),
+		chainCallback:   c.callbackChain,
+		metrics:         c.metrics,
+		hostURL:         c.hostURL,
+		additionalAttrs: map[string]string{},
 	}
 }
 
@@ -137,11 +138,6 @@ func (r *Request) Execute(method string, url string) (*Response, error) {
 
 	metricsAlias = strings.Replace(metricsAlias, ".", "-", -1)
 
-	attrs := r.additionalAttrs
-	if len(r.additionalAttrs) == 0 {
-		attrs = map[string]string{}
-	}
-
 	return registerMetrics(metricsAlias, r.metrics, func() (*Response, error) {
 		execute := func() (*Response, error) {
 			r.startTime = time.Now()
@@ -153,7 +149,7 @@ func (r *Request) Execute(method string, url string) (*Response, error) {
 		}
 
 		return r.chainCallback(execute)
-	}, attrs)
+	}, r.additionalAttrs)
 }
 
 func registerMetrics(key string, metrics Metrics, f func() (*Response, error), additionalAttrs map[string]string) (*Response, error) {
