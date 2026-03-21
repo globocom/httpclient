@@ -13,27 +13,34 @@ import (
 )
 
 type Request struct {
-	alias         string
-	chainCallback Callback
-	hostURL       *url.URL
-	metrics       Metrics
-	restyRequest  *resty.Request
-	startTime     time.Time
+	alias           string
+	chainCallback   Callback
+	hostURL         *url.URL
+	metrics         Metrics
+	additionalAttrs map[string]string
+	restyRequest    *resty.Request
+	startTime       time.Time
 }
 
 // NewRequest creates a request for the specified HTTP method.
 func (c *HTTPClient) NewRequest() *Request {
 	return &Request{
-		restyRequest:  c.resty.NewRequest(),
-		chainCallback: c.callbackChain,
-		metrics:       c.metrics,
-		hostURL:       c.hostURL,
+		restyRequest:    c.resty.NewRequest(),
+		chainCallback:   c.callbackChain,
+		metrics:         c.metrics,
+		hostURL:         c.hostURL,
+		additionalAttrs: map[string]string{},
 	}
 }
 
 // HostURL returns the setted host url.
 func (r *Request) HostURL() *url.URL {
 	return r.hostURL
+}
+
+func (r *Request) SetMetricsAttrs(attrs map[string]string) *Request {
+	r.additionalAttrs = attrs
+	return r
 }
 
 // SetHostURL sets the host url for the request.
@@ -142,24 +149,21 @@ func (r *Request) Execute(method string, url string) (*Response, error) {
 		}
 
 		return r.chainCallback(execute)
-	})
+	}, r.additionalAttrs)
 }
 
-func registerMetrics(key string, metrics Metrics, f func() (*Response, error)) (*Response, error) {
+func registerMetrics(key string, metrics Metrics, f func() (*Response, error), additionalAttrs map[string]string) (*Response, error) {
 	resp, err := f()
 
 	if metrics != nil {
 		go func(resp *Response, err error) {
-			attrs := map[string]string{}
 			if resp != nil {
-				attrs = map[string]string{
-					"host": resp.Request().HostURL().Host,
-					"path": resp.Request().HostURL().Path,
-				}
+				additionalAttrs["host"] = resp.Request().HostURL().Host
+				additionalAttrs["path"] = resp.Request().HostURL().Path
 				metrics.PushToSeries(fmt.Sprintf("%s.%s", key, "response_time"), resp.ResponseTime().Seconds())
 				if resp.statusCode != 0 {
 					metrics.IncrCounter(fmt.Sprintf("%s.status.%d", key, resp.StatusCode()))
-					attrs["status"] = fmt.Sprintf("%d", resp.StatusCode())
+					additionalAttrs["status"] = fmt.Sprintf("%d", resp.StatusCode())
 				}
 			}
 			if err != nil {
@@ -167,10 +171,10 @@ func registerMetrics(key string, metrics Metrics, f func() (*Response, error)) (
 					metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "circuit_open"))
 				} else {
 					metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "errors"))
-					attrs["error"] = err.Error()
+					additionalAttrs["error"] = err.Error()
 				}
 			}
-			metrics.IncrCounterWithAttrs(fmt.Sprintf("%s.%s", key, "total"), attrs)
+			metrics.IncrCounterWithAttrs(fmt.Sprintf("%s.%s", key, "total"), additionalAttrs)
 		}(resp, err)
 	}
 
