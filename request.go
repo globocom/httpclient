@@ -150,7 +150,7 @@ func registerMetrics(key string, metrics Metrics, f func() (*Response, error)) (
 
 	if metrics != nil {
 		go func(resp *Response, err error) {
-			var attrs map[string]string
+			attrs := map[string]string{}
 			if resp != nil {
 				attrs = map[string]string{
 					"host": resp.Request().HostURL().Host,
@@ -167,6 +167,7 @@ func registerMetrics(key string, metrics Metrics, f func() (*Response, error)) (
 					metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "circuit_open"))
 				} else {
 					metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "errors"))
+					attrs["error"] = err.Error()
 				}
 			}
 			metrics.IncrCounterWithAttrs(fmt.Sprintf("%s.%s", key, "total"), attrs)
