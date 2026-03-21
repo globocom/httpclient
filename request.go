@@ -171,7 +171,7 @@ func registerMetrics(key string, metrics Metrics, f func() (*Response, error), a
 					metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "circuit_open"))
 				} else {
 					metrics.IncrCounter(fmt.Sprintf("%s.%s", key, "errors"))
-					attrs["error"] = err.Error()
+					additionalAttrs["error"] = err.Error()
 				}
 			}
 			metrics.IncrCounterWithAttrs(fmt.Sprintf("%s.%s", key, "total"), additionalAttrs)
