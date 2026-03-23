@@ -2,8 +2,6 @@ package httpclient
 
 import (
 	"context"
-	"crypto/tls"
-	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -78,27 +76,6 @@ func (c *HTTPClient) setTransport(transport http.RoundTripper) {
 	c.resty.SetTransport(transport)
 }
 
-func NewDefaultTransport(transportTimeout time.Duration) http.RoundTripper {
-	return &Transport{
-		RoundTripper: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-			DialContext: (&net.Dialer{
-				Timeout:   transportTimeout,
-				KeepAlive: 15 * time.Second,
-				DualStack: true,
-			}).DialContext,
-			MaxIdleConns:        100,
-			MaxIdleConnsPerHost: 100,
-			IdleConnTimeout:     90 * time.Second,
-			TLSHandshakeTimeout: 10 * time.Second,
-			TLSClientConfig: &tls.Config{
-				MinVersion:         tls.VersionTLS12,
-				ClientSessionCache: tls.NewLRUClientSessionCache(-1),
-			},
-		},
-	}
-}
-
 // WithDefaultTransport sets a custom connection timeout to http.Transport.
 // This timeout limits the time spent establishing a TCP connection.
 //
@@ -144,23 +121,21 @@ func WithOAUTHTransport(conf cc.Config, transportTimeout time.Duration) func(*HT
 // More information about proxy: http.Transport.
 func WithDefaultTransportWithProxy(proxyURL *url.URL) func(*HTTPClient) {
 	return func(client *HTTPClient) {
-		transport := &Transport{
-			RoundTripper: &http.Transport{
-				Proxy: http.ProxyURL(proxyURL),
-				DialContext: (&net.Dialer{
-					KeepAlive: 5 * time.Minute,
-					DualStack: true,
-				}).DialContext,
-				MaxIdleConns:        10,
-				IdleConnTimeout:     90 * time.Second,
-				TLSHandshakeTimeout: 10 * time.Second,
-				TLSClientConfig: &tls.Config{
-					MinVersion:         tls.VersionTLS12,
-					ClientSessionCache: tls.NewLRUClientSessionCache(-1),
-				},
-			},
-		}
+		transport := NewDefaultTransport(5 * time.Second)
+		transport.SetProxy(http.ProxyURL(proxyURL))
+		client.setTransport(transport)
+	}
+}
 
+// WithDefaultTransportWithDNSCache sets a cache for DNS lookups.
+// The TTL of the cache is defined by DNS Server TTL.
+// The keepAliveDuration is the time to keep the connection alive.
+//
+// More information about DNS cache: https://github.com/rs/dnscache.
+func WithDefaultTransportWithDNSCache(keepAliveDuration time.Duration) func(*HTTPClient) {
+	return func(client *HTTPClient) {
+		transport := NewDefaultTransport(5 * time.Second)
+		transport.SetDNSCache(keepAliveDuration, 5*time.Minute)
 		client.setTransport(transport)
 	}
 }
